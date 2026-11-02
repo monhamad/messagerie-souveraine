@@ -1,0 +1,6 @@
+.env
+backups/
+*.pgdump
+*.tgz
+__pycache__/
+.venv/

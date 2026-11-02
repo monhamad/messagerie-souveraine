@@ -1,0 +1,8 @@
+# Comptes de démonstration FICTIFS (aucune personne réelle). Format : user,password,role
+# En production : supprimer ce fichier et créer les agents avec scripts/admin.py enroll.
+# Le compte "intrus" n'existe volontairement PAS : il sert à l'épreuve « intrus non enrôlé ».
+admin.demo,Admin-Demo-2026!,admin
+agent.demo1,Agent-Demo-2026!,agent
+agent.demo2,Agent-Demo-2026!,agent
+agent.demo3,Agent-Demo-2026!,agent
+chef.demo,Agent-Demo-2026!,agent
