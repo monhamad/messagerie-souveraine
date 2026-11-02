@@ -63,3 +63,5 @@ Environnement : Ubuntu (VM), Docker Compose, Synapse + PostgreSQL + Element Web 
 Non vérifié directement : le changement des clés du groupe après le départ de l'agent révoqué. Il est effectué par les clients Element, pas par le serveur. Le serveur coupe l'accès, ce qui est testé.
 
 Toujours **non exécutés** : 8 (multi-appareils E2EE), 9 (redémarrage du serveur), 10 (fonctionnement sans Internet), capture réseau.
+
+| 9. Redémarrage du serveur | **Exécuté** : `docker compose restart` ; après rechargement, la session d'agent.demo1 est conservée.  historique visible, clé de récupération non redemandée. |
