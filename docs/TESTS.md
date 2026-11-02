@@ -46,3 +46,20 @@ Règle : un test n'est marqué « Exécuté » que s'il a tourné avec un résul
 4. Capture réseau (Wireshark/tcpdump) : le trafic doit être en TLS, aucun marqueur lisible.
 5. `python3 tests/test_api_scenarios.py` sur une pile neuve.
 6. Noter les résultats observés dans ce fichier.
+
+## Résultats observés sur la pile Docker réelle (2 novembre 2026)
+
+Environnement : Ubuntu (VM), Docker Compose, Synapse + PostgreSQL + Element Web + Caddy, images officielles.
+
+| Scénario | Résultat observé |
+|---|---|
+| 1. Deux agents échangent des messages | **Exécuté** : agent.demo1 et agent.demo2 échangent dans une discussion chiffrée (Element affiche « Envoyer un message chiffré »). |
+| 2. Fichier envoyé chiffré | **Exécuté** : `test-secret.txt` (39 octets, contenant TESTFICHIER-98765) envoyé ; 1 fichier stocké dans `/data/media_store`. |
+| 3. Le serveur ne lit rien | **Exécuté** : `tests/check_no_plaintext.sh` : 0 `m.room.message`, 2 `m.room.encrypted` ; marqueurs TESTCLAIR-12345 et TESTFICHIER-98765 introuvables dans `event_json` et dans le dépôt de médias. |
+| 4. Agent non enrôlé | **Exécuté** (API, voir plus haut) |
+| 6. Révocation pendant une conversation | **Exécuté** : `admin.py revoke agent.demo2` : compte désactivé, 0 appareil, 0 salle. Fenêtre d'agent.demo2 : « Appareil supprimé : par mesure de sécurité, la session a expiré ». Fenêtre d'agent.demo1 : « agent.demo2 a quitté le salon ». |
+| 7. Agent révoqué | **Exécuté** : reconnexion refusée (« Nom d'utilisateur et/ou mot de passe incorrect »). Message générique de Synapse, qui ne révèle pas l'état du compte. |
+
+Non vérifié directement : le changement des clés du groupe après le départ de l'agent révoqué. Il est effectué par les clients Element, pas par le serveur. Le serveur coupe l'accès, ce qui est testé.
+
+Toujours **non exécutés** : 8 (multi-appareils E2EE), 9 (redémarrage du serveur), 10 (fonctionnement sans Internet), capture réseau.
