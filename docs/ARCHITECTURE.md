@@ -24,7 +24,7 @@
 | Caddy | Reverse proxy, TLS interne, en-têtes de sécurité | Apache-2.0 |
 | Alpine | Conteneur d'initialisation (génère les secrets et la config) | Licences diverses (MIT pour la base) |
 | `scripts/admin.py` (notre code) | Enrôlement, révocation, audit via l'API admin | MIT |
-| Keycloak (prévu, `À faire`) | Second facteur TOTP via OIDC | Apache-2.0 |
+| Keycloak | Identité et second facteur TOTP, relié à Synapse par OIDC ; le mot de passe local de Synapse est désactivé | Apache-2.0 |
 
 Flux : navigateur → Caddy (TLS) → Element (fichiers statiques) ou Synapse (API Matrix). Les messages sont chiffrés dans le navigateur avant envoi ; Synapse les stocke dans PostgreSQL sous forme d'évènements `m.room.encrypted`. Les fichiers sont chiffrés côté client avant l'envoi vers le dépôt de médias.
 
@@ -37,7 +37,7 @@ Flux : navigateur → Caddy (TLS) → Element (fichiers statiques) ou Synapse (A
 | 3 | Installation en une commande | `docker compose up -d` (init, db, synapse, bootstrap, element, caddy) | Écrit, non exécuté |
 | 4 | Aucun service tiers indispensable | Fédération et serveurs de clés désactivés, pas d'aperçu d'URL, pas de push, TLS interne | Partiel : les images Docker sont téléchargées à l'installation (question posée au jury) |
 | 5 | Seuls des agents enrôlés | Inscription publique fermée, comptes créés par l'administrateur | Écrit, non exécuté |
-| 6 | Authentification forte (second facteur) | Keycloak + OIDC + TOTP | **À faire** |
+| 6 | Authentification forte (second facteur) | Keycloak + OIDC + TOTP imposé ; connexion par mot de passe Matrix désactivée | Écrit. **Testé** : Synapse n'offre que le SSO. **Non testé** : page de connexion Keycloak et saisie du code TOTP (à valider sur Docker) |
 | 7 | Gestion des rôles | Administrateur serveur + niveaux de puissance des salles | Partiel |
 | 8 | Révocation immédiate sur tous les appareils | `admin.py revoke` : désactivation, jetons et appareils supprimés, vérification | Écrit, non exécuté |
 | 9 | Le serveur ne lit rien | `tests/check_no_plaintext.sh` (base et médias) + capture réseau | Écrit, non exécuté |
@@ -65,7 +65,8 @@ Mesures de réduction retenues : fédération désactivée, présence désactiv�
 
 - **Fuite en clair** (salle non chiffrée, notification, sauvegarde) : éliminatoire. Test obligatoire sur votre machine.
 - **Révocation** : bloque l'accès au serveur et déclenche le changement de clés par les clients. Elle n'efface pas ce qu'un appareil a déjà déchiffré.
-- **2FA non encore implémenté** : le socle est incomplet tant que Keycloak n'est pas intégré. À déclarer sinon.
+- **2FA à valider sur la pile réelle** : la moitié Keycloak (page de connexion, TOTP) n'a pas pu être testée hors de Docker. En cas d'échec, le mode de repli `AUTH_MODE=password` fonctionne mais **sans second facteur** : à déclarer comme tel.
+- **Dépendance forte à Keycloak** : s'il est arrêté, plus personne ne peut se connecter (le mot de passe Matrix est désactivé).
 - **Versions d'images non épinglées** : épingler après le premier démarrage réussi.
 - **Explication orale** : élimination si un membre ne sait pas expliquer.
 

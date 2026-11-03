@@ -1,0 +1,25 @@
+# --- Authentification forte : connexion unique via Keycloak (mot de passe + code TOTP) ---
+# Le mot de passe local de Synapse est désactivé : aucun contournement du second facteur.
+password_config:
+  enabled: false
+
+oidc_providers:
+  - idp_id: keycloak
+    idp_name: "Compte agent (authentification à deux facteurs)"
+    issuer: "__PUBLIC_URL__/auth/realms/souverain"
+    client_id: "synapse"
+    client_secret: "__OIDC_SECRET__"
+    client_auth_method: client_secret_basic
+    scopes: ["openid", "profile"]
+    # Adresse publique pour le navigateur, adresse interne Docker pour Synapse.
+    discover: false
+    authorization_endpoint: "__PUBLIC_URL__/auth/realms/souverain/protocol/openid-connect/auth"
+    token_endpoint: "http://keycloak:8080/auth/realms/souverain/protocol/openid-connect/token"
+    jwks_uri: "http://keycloak:8080/auth/realms/souverain/protocol/openid-connect/certs"
+    userinfo_endpoint: "http://keycloak:8080/auth/realms/souverain/protocol/openid-connect/userinfo"
+    # Les comptes Matrix existants (ex. administrateur) sont rattachés à l'identité Keycloak de même nom.
+    allow_existing_users: true
+    user_mapping_provider:
+      config:
+        localpart_template: "{{ user.preferred_username }}"
+        display_name_template: "{{ user.name }}"

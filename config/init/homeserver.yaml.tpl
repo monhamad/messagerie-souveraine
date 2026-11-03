@@ -46,15 +46,7 @@ enable_registration: false
 allow_guest_access: false
 allow_public_rooms_without_auth: false
 require_auth_for_profile_requests: true
-password_config:
-  enabled: true
-  policy:
-    enabled: true
-    minimum_length: 12
-    require_digit: true
-    require_lowercase: true
-    require_uppercase: true
-    require_symbol: true
+__AUTH_BLOCK__
 
 # --- E2EE par défaut pour toutes les salles ---
 encryption_enabled_by_default_for_room_type: all

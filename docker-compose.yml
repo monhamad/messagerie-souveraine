@@ -1,19 +1,23 @@
 # Messagerie souveraine — déploiement en une commande : docker compose up -d
-# Variables optionnelles (voir .env.example) : SERVER_NAME, PUBLIC_HOST, PUBLIC_URL, HTTPS_PORT
+# Variables optionnelles (voir .env.example) : SERVER_NAME, PUBLIC_HOST, PUBLIC_URL, HTTPS_PORT, AUTH_MODE
 name: messagerie-souveraine
 
 services:
-  # Génère les secrets (une seule fois) et la configuration de Synapse.
+  # Génère les secrets (une seule fois), la configuration de Synapse et le realm Keycloak.
   init:
     image: ${ALPINE_IMAGE:-alpine:3.20}
     command: ["sh", "/init/init.sh"]
     environment:
       SERVER_NAME: ${SERVER_NAME:-localhost}
       PUBLIC_URL: ${PUBLIC_URL:-https://localhost}
+      AUTH_MODE: ${AUTH_MODE:-oidc}
     volumes:
       - ./config/init:/init:ro
+      - ./demo:/demo:ro
       - generated:/generated
       - synapse_data:/data
+      - kc_import:/kc_import
+      - kc_data:/kc_data
     restart: "no"
 
   db:
@@ -59,7 +63,30 @@ services:
       retries: 30
       start_period: 20s
 
-  # Crée les comptes de démonstration FICTIFS (idempotent).
+  # Identité et second facteur (TOTP). Exposé aux navigateurs via Caddy sous /auth.
+  keycloak:
+    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}
+    restart: unless-stopped
+    command: ["start", "--import-realm"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      # Mot de passe de DÉMONSTRATION : à changer (variable KEYCLOAK_ADMIN_PASSWORD) hors démo.
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-Admin-KC-Demo-2026!}
+      KC_HOSTNAME: ${PUBLIC_URL:-https://localhost}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+    volumes:
+      - kc_import:/opt/keycloak/data/import:ro
+      - kc_data:/opt/keycloak/data/h2
+    ports:
+      # API d'administration de Keycloak : accessible uniquement depuis la machine hôte (scripts/admin.py).
+      - "127.0.0.1:8081:8080"
+
+  # Crée les comptes Matrix de démonstration FICTIFS (idempotent).
   bootstrap:
     image: ${SYNAPSE_IMAGE:-matrixdotorg/synapse:latest}
     restart: "no"
@@ -86,6 +113,8 @@ services:
         condition: service_healthy
       element:
         condition: service_started
+      keycloak:
+        condition: service_started
     environment:
       PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
     ports:
@@ -100,5 +129,7 @@ volumes:
   generated:
   pgdata:
   synapse_data:
+  kc_import:
+  kc_data:
   caddy_data:
   caddy_config:

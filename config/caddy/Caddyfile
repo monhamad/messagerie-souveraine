@@ -15,9 +15,19 @@
 		-Server
 	}
 
-	# API Matrix uniquement ; l'API d'administration n'est jamais exposée ici.
-	@matrix path /_matrix/* /_synapse/client/*
-	reverse_proxy @matrix synapse:8008
+	# Keycloak : page de connexion (mot de passe + code TOTP).
+	handle /auth/* {
+		reverse_proxy keycloak:8080
+	}
 
-	reverse_proxy element:80
+	# API Matrix uniquement ; l'API d'administration de Synapse n'est jamais exposée ici.
+	@matrix path /_matrix/* /_synapse/client/*
+	handle @matrix {
+		reverse_proxy synapse:8008
+	}
+
+	# Tout le reste : interface web Element.
+	handle {
+		reverse_proxy element:80
+	}
 }

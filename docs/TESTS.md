@@ -47,21 +47,17 @@ Règle : un test n'est marqué « Exécuté » que s'il a tourné avec un résul
 5. `python3 tests/test_api_scenarios.py` sur une pile neuve.
 6. Noter les résultats observés dans ce fichier.
 
-## Résultats observés sur la pile Docker réelle (2 novembre 2026)
+## Authentification à deux facteurs (Keycloak + TOTP) : état des vérifications
 
-Environnement : Ubuntu (VM), Docker Compose, Synapse + PostgreSQL + Element Web + Caddy, images officielles.
+Exécuté sur Synapse 1.164.1 (pip, SQLite) avec la configuration OIDC rendue par `init.sh`, **sans Keycloak** :
 
-| Scénario | Résultat observé |
+| Vérification | Résultat |
 |---|---|
-| 1. Deux agents échangent des messages | **Exécuté** : agent.demo1 et agent.demo2 échangent dans une discussion chiffrée (Element affiche « Envoyer un message chiffré »). |
-| 2. Fichier envoyé chiffré | **Exécuté** : `test-secret.txt` (39 octets, contenant TESTFICHIER-98765) envoyé ; 1 fichier stocké dans `/data/media_store`. |
-| 3. Le serveur ne lit rien | **Exécuté** : `tests/check_no_plaintext.sh` : 0 `m.room.message`, 2 `m.room.encrypted` ; marqueurs TESTCLAIR-12345 et TESTFICHIER-98765 introuvables dans `event_json` et dans le dépôt de médias. |
-| 4. Agent non enrôlé | **Exécuté** (API, voir plus haut) |
-| 6. Révocation pendant une conversation | **Exécuté** : `admin.py revoke agent.demo2` : compte désactivé, 0 appareil, 0 salle. Fenêtre d'agent.demo2 : « Appareil supprimé : par mesure de sécurité, la session a expiré ». Fenêtre d'agent.demo1 : « agent.demo2 a quitté le salon ». |
-| 7. Agent révoqué | **Exécuté** : reconnexion refusée (« Nom d'utilisateur et/ou mot de passe incorrect »). Message générique de Synapse, qui ne révèle pas l'état du compte. |
+| Méthodes de connexion offertes par le serveur | `m.login.sso` (« Compte agent (authentification à deux facteurs) ») et `m.login.token` ; **pas de `m.login.password`** |
+| Connexion par mot de passe d'un compte inexistant | Refusée (HTTP 400) |
+| Mode de repli `AUTH_MODE=password` | 17/17 vérifications réussies (sans second facteur) |
+| Scénarios en mode oidc | 16/16 vérifications réussies, rejouables sans recréer la pile |
 
-Non vérifié directement : le changement des clés du groupe après le départ de l'agent révoqué. Il est effectué par les clients Element, pas par le serveur. Le serveur coupe l'accès, ce qui est testé.
+**Non exécuté, à faire sur la pile Docker** : démarrage de Keycloak, import du realm, page de connexion, configuration du TOTP à la première connexion, échange de jeton avec Synapse, rattachement du compte `admin.demo` existant, `admin.py enroll` et `admin.py revoke` côté Keycloak.
 
-Toujours **non exécutés** : 8 (multi-appareils E2EE), 9 (redémarrage du serveur), 10 (fonctionnement sans Internet), capture réseau.
-
-| 9. Redémarrage du serveur | **Exécuté** : `docker compose restart` ; après rechargement, la session d'agent.demo1 est conservée.  historique visible, clé de récupération non redemandée. |
+Constat de test à retenir : les jetons « login-as » émis par l'API d'administration ne sont pas enregistrés en base et **ne sont pas invalidés par la désactivation du compte** ; ils ne servent pas aux sessions réelles. Les jetons ordinaires (ceux d'une vraie connexion) sont bien rejetés (HTTP 401) après révocation. Les tests utilisent donc des jetons ordinaires.
