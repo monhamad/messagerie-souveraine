@@ -1,8 +1,10 @@
 # Messagerie souveraine de l'administration
 
+**Équipe Argus** - École Polytechnique de Ouagadougou - COMPAORE Elisé, KI Armand, OUEDRAOGO Monhamad.
+
 Prototype de messagerie instantanée chiffrée de bout en bout pour les agents publics burkinabè, hébergeable sur l'infrastructure de l'État. Sprint technique pré-hackathon 2026 (MTDPCE/DGTD).
 
-**État du prototype** : socle Matrix durci, chiffrement de bout en bout, enrôlement et révocation testés sur la pile Docker réelle (voir `docs/TESTS.md`). L'authentification à deux facteurs (Keycloak + code TOTP, mot de passe Matrix désactivé) est écrite et sa moitié Synapse est testée ; **la page de connexion Keycloak reste à valider sur la pile Docker**. [À METTRE À JOUR après validation.]
+**État du prototype** : fonctionnel et testé sur la pile Docker réelle (voir `docs/TESTS.md`) : chiffrement de bout en bout, inscription fermée, authentification à deux facteurs (Keycloak + TOTP, mot de passe Matrix désactivé), révocation, 19 vérifications automatisées. Limites en fin de document.
 
 ## Concept
 
@@ -67,3 +69,7 @@ python3 scripts/admin.py list
 - Pas de notifications push mobiles (elles dépendraient d'un service tiers).
 - Application web uniquement ; pas d'application mobile native.
 - Aucun audit de sécurité externe.
+
+## Historique du dépôt
+
+Le dépôt Git a été créé le 2 novembre 2026 ; l'historique des commits reflète cette chronologie réelle.
