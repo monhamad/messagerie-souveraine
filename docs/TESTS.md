@@ -61,3 +61,9 @@ Exécuté sur Synapse 1.164.1 (pip, SQLite) avec la configuration OIDC rendue pa
 **Non exécuté, à faire sur la pile Docker** : démarrage de Keycloak, import du realm, page de connexion, configuration du TOTP à la première connexion, échange de jeton avec Synapse, rattachement du compte `admin.demo` existant, `admin.py enroll` et `admin.py revoke` côté Keycloak.
 
 Constat de test à retenir : les jetons « login-as » émis par l'API d'administration ne sont pas enregistrés en base et **ne sont pas invalidés par la désactivation du compte** ; ils ne servent pas aux sessions réelles. Les jetons ordinaires (ceux d'une vraie connexion) sont bien rejetés (HTTP 401) après révocation. Les tests utilisent donc des jetons ordinaires.
+
+### Tests automatisés complets sur la pile Docker réelle (3 novembre 2026)
+
+`python3 tests/test_api_scenarios.py` : **19/19 vérifications réussies** (mode oidc, pile avec Keycloak).
+Dont : connexion par mot de passe local absente (seule connexion offerte : SSO Keycloak), inscription publique refusée, salles chiffrées par défaut, révocation vérifiée (jeton rejeté, envoi impossible, sortie du groupe), `admin.py enroll` crée l'agent dans Keycloak, `admin.py revoke` désactive l'identité Keycloak et ferme ses sessions.
+Non couvert par ce script : la tentative de reconnexion d'un agent révoqué dans le navigateur via Keycloak.

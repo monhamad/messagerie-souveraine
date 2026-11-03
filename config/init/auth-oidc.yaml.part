@@ -13,6 +13,9 @@ oidc_providers:
     scopes: ["openid", "profile"]
     # Adresse publique pour le navigateur, adresse interne Docker pour Synapse.
     discover: false
+    skip_verification: true
+    additional_authorization_parameters:
+      prompt: "login"
     authorization_endpoint: "__PUBLIC_URL__/auth/realms/souverain/protocol/openid-connect/auth"
     token_endpoint: "http://keycloak:8080/auth/realms/souverain/protocol/openid-connect/token"
     jwks_uri: "http://keycloak:8080/auth/realms/souverain/protocol/openid-connect/certs"
